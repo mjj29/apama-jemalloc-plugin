@@ -1,7 +1,7 @@
 /**
  * Title:        JEMallocPlugin.cpp
  * Description:  JEMalloc EPL Plugin
- * Copyright (c) 2020 Software AG, Darmstadt, Germany andor its licensors
+ * Copyright (c) 2020 Software AG, Darmstadt, Germany and/or its licensors
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
  * file except in compliance with the License. You may obtain a copy of the License at
@@ -45,6 +45,7 @@ public:
 		md.registerMethod<decltype(&JEMallocPlugin::mallctl_getbool), &JEMallocPlugin::mallctl_getbool>("mallctl_getbool");
 		md.registerMethod<decltype(&JEMallocPlugin::mallctl_getsize), &JEMallocPlugin::mallctl_getsize>("mallctl_getsize");
 		md.registerMethod<decltype(&JEMallocPlugin::mallctl_getunsigned), &JEMallocPlugin::mallctl_getunsigned>("mallctl_getunsigned");
+		md.registerMethod<decltype(&JEMallocPlugin::updateepoch), &JEMallocPlugin::updateepoch>("updateepoch");
 	}
 
 	int64_t mallctl_getunsigned(const char *command)
@@ -70,6 +71,16 @@ public:
 		size_t rvsize = sizeof(T);
 		je_mallctl(command, &rv, &rvsize, nullptr, 0);
 		return rv;
+	}
+
+	void updateepoch()
+	{
+		logger.info("Executing malloc command to update epoch");
+		uint64_t epoch;
+		size_t epochsize = sizeof(uint64_t);
+		je_mallctl("epoch", &epoch, &epochsize, nullptr, 0);
+		++epoch;
+		je_mallctl("epoch", &epoch, &epochsize, &epoch, epochsize);
 	}
 
 	void mallctl(const char *command)
