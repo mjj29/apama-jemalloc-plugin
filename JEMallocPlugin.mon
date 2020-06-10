@@ -21,11 +21,11 @@ event JEMalloc
 	{
 		plugin.mallctl("thread.tcache.flush");
 	}
-	static action getThreadAllocated() returns integer
+	static action getThreadAllocatedBytes() returns integer
 	{
 		return plugin.mallctl_getint("thread.allocated");
 	}
-	static action getThreadDeallocated() returns integer
+	static action getThreadDeallocatedBytes() returns integer
 	{
 		return plugin.mallctl_getint("thread.deallocated");
 	}
@@ -46,23 +46,23 @@ event JEMalloc
 	{
 		return plugin.mallctl_getsize("stats.arenas.<"+arenaNum.toString()+">.pdirty");
 	}
-	static action getResident() returns integer
+	static action getResidentBytes() returns integer
 	{
 		return plugin.mallctl_getsize("stats.resident");
 	}
-	static action getActive() returns integer
+	static action getActiveBytes() returns integer
 	{
 		return plugin.mallctl_getsize("stats.active");
 	}
-	static action getAllocated() returns integer
+	static action getAllocatedBytes() returns integer
 	{
 		return plugin.mallctl_getsize("stats.allocated");
 	}
-	static action getMapped() returns integer
+	static action getMappedBytes() returns integer
 	{
 		return plugin.mallctl_getsize("stats.mapped");
 	}
-	static action getRetained() returns integer
+	static action getRetainedBytes() returns integer
 	{
 		return plugin.mallctl_getsize("stats.retained");
 	}
