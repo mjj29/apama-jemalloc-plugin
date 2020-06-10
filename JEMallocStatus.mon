@@ -70,18 +70,10 @@ monitor JEMallocStatus
 	/** Start the status line and read the configuration. Status lines writing is spawned to its own private context. */
 	action onload()
 	{
-		dictionary<string, string> envp := Component.getInfo("envp");
-		jemallocEnabled := "jemalloc" = envp.getOr("AP_ALLOCATOR", "");
-		memoryTrackEnabled := envp.hasKey("AP_TRACKMEMORY");
-		dictionary<string, string> props := Component.getConfigProperties();
-		STATUS_INTERVAL_SECS := float.parse(props.getOr("MEMORY_STATUS_INTERVAL_SECS", STATUS_INTERVAL_SECS.toString()));
-		STATS_TMP_FILE := props.getOr("MEMORY_STATUS_TEMP_FILE", STATS_TMP_FILE);
-		if (jemallocEnabled or memoryTrackEnabled) {
-			log "Starting memory status thread" at INFO;
-			spawn logStats() to context("JEMallocStatsContext");
-		} else {
-			log "No memory stats available, not logging. Set either or both of AP_TRACKMEMORY=true or AP_ALLOCATOR=jemalloc before starting the correlator." at INFO;
-		}
+		jemallocEnabled := true;
+		memoryTrackEnabled := true;
+		log "Starting memory status thread" at INFO;
+		spawn logStats() to context("JEMallocStatsContext");
 	}
 
 	/** @private */
