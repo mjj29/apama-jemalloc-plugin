@@ -33,13 +33,13 @@ The file `JEMalloc.mon` provides access to explicit JEMalloc requests, eg:
 
 ## Getting memory status lines
 
-The file `JEMallocStatus.mon` will provide periodic status lines with additional memory statistics from both JEMalloc and the platform allocator. To use it you will need to have injected `JEMalloc.mon` from this directory and `ManagementPluginImpl.mon` and `ManagementPlugin.mon` from your Apama installation. You can do this with an initialization list, for example:
+The file `JEMallocStatus.mon` will provide periodic status lines with additional memory statistics from both JEMalloc and the platform allocator. To use it you will need to have injected `JEMalloc.mon` from this directory and `ManagementImpl.mon` and `Management.mon` from your Apama installation. You can do this with an initialization list, for example:
 
 	correlator:
 		initialization:
 			list:
-				- ${APAMA_HOME}/monitors/ManagementPluginImpl.mon
-				- ${APAMA_HOME}/monitors/ManagementPlugin.mon
+				- ${APAMA_HOME}/monitors/ManagementImpl.mon
+				- ${APAMA_HOME}/monitors/Management.mon
 				- ${PARENT_DIR}/JEMalloc.mon
 				- ${PARENT_DIR}/JEMallocStatus.mon
 
