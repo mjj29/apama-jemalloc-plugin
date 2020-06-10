@@ -55,4 +55,4 @@ You can also configure the status line via two correlator properties:
 
 ## API documentation
 
-API documentation can be found here: [API documentation](https://mjj29.github.io/apama-jemalloc-plugin/docs/)
+API documentation can be found here: [API documentation](https://mjj29.github.io/apama-jemalloc-plugin/)
