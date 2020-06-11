@@ -16,6 +16,7 @@
 #include <epl_plugin.hpp>
 #include <inttypes.h>
 #include <fstream>
+#include <cstdio>
 
 using namespace com::apama::epl;
 
@@ -53,13 +54,17 @@ public:
 	}
 
 	/** Read the contents of a file from disk. Needed as a hack for calling malloc_stats management request. */
-	std::string readfile(const char *path)
+	std::string readfile(const char *path, bool unlink)
 	{
 		std::ifstream ifs(path, std::ios::in | std::ios::binary | std::ios::ate);
 		auto size = ifs.tellg();
 		ifs.seekg(0, std::ios::beg);
 		std::vector<char> bytes(size);
 		ifs.read(bytes.data(), size);
+		ifs.close();
+		if (unlink) {
+			std::remove(path);
+		}
 		return std::string(bytes.data(), size);
 	}
 

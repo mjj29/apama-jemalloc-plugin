@@ -15,6 +15,7 @@
 package com.apamax;
 
 using com.apama.correlator.Component;
+using com.apama.correlator.timeformat.TimeFormat;
 
 /**
  * Log a status line periodically containing assorted memory statistics.
@@ -30,9 +31,29 @@ using com.apama.correlator.Component;
 <li><tt>MEMORY_STATUS_INTERVAL_SECS</tt> - the number of seconds between printing each status line (default: 5)</li>
 <li><tt>MEMORY_STATUS_TEMP_FILE</tt> - the temporary file to use for gathering stats for the platform allocator (default: /tmp/JEMallocStats.tmp.file.txt)</li>
 </ul>
+ *
+ * The status line gives values in megabytes (note: this is in contrast to the Apama status line which uses kilobytes). The status line contains the following items (depending whether they are enabled):
+ *
+<ul>
+<li><tt>jeall</tt> - (JEMalloc) Total number of bytes allocated by the application.</li>
+<li><tt>jeres</tt> - (JEMalloc) Maximum number of bytes in physically resident data pages mapped by the allocator.</li>
+<li><tt>jeact</tt> - (JEMalloc) Total number of bytes in active pages allocated by the application.</li>
+<li><tt>jemap</tt> - (JEMalloc) Total number of bytes in active extents mapped by the allocator.</li>
+<li><tt>jeret</tt> - (JEMalloc) Total number of bytes in virtual memory mappings that were retained rather than being returned to the operating system.</li>
+<li><tt>jeefficiency</tt> - (JEMalloc) Percentage of max(res, map) which is allocated by the application.</li>
+<li><tt>use</tt> - (System) In-use bytes.</li>
+<li><tt>sys</tt> - (System) System bytes.</li>
+<li><tt>max</tt> - (System) System max.</li>
+<li><tt>cur</tt> - (System) System current.</li>
+<li><tt>tot</tt> - (System) Aspace total.</li>
+<li><tt>efficiency</tt> - (System) Percentage of current which is in-use.</li>
+</ul>
  */
-monitor JEMallocStats
+monitor JEMallocStatus
 {
+	/** @private */
+	constant integer MB_SCALE := 1048576; //1024*1024
+
 	/** @private */
 	boolean jemallocEnabled;
 	/** @private */
@@ -41,6 +62,10 @@ monitor JEMallocStats
 	float STATUS_INTERVAL_SECS := 5.0;
 	/** @private */
 	string STATS_TMP_FILE := "/tmp/JEMallocStats.tmp.file.txt";
+	/** @private */
+	boolean xclockWarning := false;
+	/** @private */
+	float lastStatusTime := 0.0;
 
 	/** Start the status line and read the configuration. Status lines writing is spawned to its own private context. */
 	action onload()
@@ -59,10 +84,30 @@ monitor JEMallocStats
 		}
 	}
 
+	/** @private */
+	action checkTimeWarning() 
+	{	
+		float now := TimeFormat.getSystemTime();
+		if (now-lastStatusTime) < (STATUS_INTERVAL_SECS-1.0) {
+			if not xclockWarning {
+				log "Memory status line occurred much sooner than it should ("+(now-lastStatusTime).toString()+" secs rather than "+STATUS_INTERVAL_SECS.toString()+" secs). If this correlator is being externally clocked then status will be logged using the externally clocked time, not wall clock time." at WARN;
+				xclockWarning := true;
+			}
+		}
+		if (now-lastStatusTime) > (STATUS_INTERVAL_SECS+1.0) {
+			log "Memory status line logged "+(now-lastStatusTime-STATUS_INTERVAL_SECS).toString()+" secs after it should have been. Correlator is either under heavy load or externally clocked." at WARN;
+		}
+		lastStatusTime := now;
+	}
+
 	/** Run the loop to log the status line. */
 	action logStats()
 	{
+		lastStatusTime := TimeFormat.getSystemTime();
 		on all wait(STATUS_INTERVAL_SECS) {
+			checkTimeWarning();
+
+			float start := TimeFormat.getMicroTime();
 			string statusLine := "Memory Status:";
 
 			if (jemallocEnabled) {
@@ -77,11 +122,11 @@ monitor JEMallocStats
 				integer ret := JEMalloc.getRetainedBytes();
 
 				// build the status line
-				statusLine := statusLine + " jeres="+(res/1024).toString();
-				statusLine := statusLine + " jeact="+(act/1024).toString();
-				statusLine := statusLine + " jeall="+(alloc/1024).toString();
-				statusLine := statusLine + " jemap="+(map/1024).toString();
-				statusLine := statusLine + " jeret="+(ret/1024).toString();
+				statusLine := statusLine + " jeres="+(res/MB_SCALE).toString();
+				statusLine := statusLine + " jeact="+(act/MB_SCALE).toString();
+				statusLine := statusLine + " jeall="+(alloc/MB_SCALE).toString();
+				statusLine := statusLine + " jemap="+(map/MB_SCALE).toString();
+				statusLine := statusLine + " jeret="+(ret/MB_SCALE).toString();
 
 				// efficiency is the percentage of memory actually used and not fragmentized
 				statusLine := statusLine + " jeefficiency="+(100.0*alloc.toFloat()/integer.max(res, map).toFloat()).formatFixed(0)+"%";
@@ -90,7 +135,7 @@ monitor JEMallocStats
 			if (memoryTrackEnabled) {
 				// get the stats
 				string ignore := Component.management.syncRequestSeq("malloc_stats", [STATS_TMP_FILE]);
-				string stats := JEMalloc.plugin.readfile(STATS_TMP_FILE);
+				string stats := JEMalloc.plugin.readfile(STATS_TMP_FILE, true);
 
 				integer current := 0;
 				integer max := 0;
@@ -119,13 +164,18 @@ monitor JEMallocStats
 				}
 
 				// build the status line
-				statusLine := statusLine + " sys="+(system/1024).toString();
-				statusLine := statusLine + " use="+(inuse/1024).toString();
-				statusLine := statusLine + " max="+(max/1024).toString();
-				statusLine := statusLine + " tot="+(total/1024).toString();
+				statusLine := statusLine + " sys="+(system/MB_SCALE).toString();
+				statusLine := statusLine + " use="+(inuse/MB_SCALE).toString();
+				statusLine := statusLine + " max="+(max/MB_SCALE).toString();
+				statusLine := statusLine + " tot="+(total/MB_SCALE).toString();
+				statusLine := statusLine + " cur="+(current/MB_SCALE).toString();
 
 				// efficiency is the percentage of memory actually used and not fragmentized
 				statusLine := statusLine + " efficiency="+(100.0*inuse.toFloat()/current.toFloat()).formatFixed(0)+"%";
+			}
+			float end := TimeFormat.getMicroTime();
+			if (end-start > 0.2) {
+				log "Gathering statistics took "+(end-start).toString()+"s." at INFO;
 			}
 
 			// log the final status line
