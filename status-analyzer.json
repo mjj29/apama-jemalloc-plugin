@@ -1,0 +1,39 @@
+{
+	"userStatusLines": {
+		"com.apamax.JEMallocStatus [0] Memory Status:": {
+			"keyPrefix":"memory.",
+			"key:alias": {
+				"jeres":"JEMalloc Resident MB",
+				"jeact":"JEMalloc Active MB",
+				"jeall":"JEMalloc Allocated MB",
+				"jemap":"JEMalloc Mapped MB",
+				"jeret":"JEMalloc Retained MB",
+				"jeefficiency":"JEMalloc Overhead",
+				"sys":"System Memory MB",
+				"use":"System In-Use Memory MB",
+				"max":"System Max Memory MB",
+				"tot":"System Total Memory MB",
+				"cur":"System Current Memory MB",
+				"efficiency":"System Memory Overhead"
+			}
+		}
+	},
+	"userCharts": {
+		"JEMalloc": {
+			"heading":"JEMalloc Memory",
+			"labels":["memory.JEMalloc Allocated MB", "memory.JEMalloc Active MB", "memory.JEMalloc Overhead"],
+			"colours":["red", "green", "blue"],
+			"ylabel":"MB",
+			"y2lable":"Percentage",
+			"series":{"memory.JEMalloc Overhead":{"axis":"y2"}}
+		},
+		"SysMem": {
+			"heading":"System Memory",
+			"labels":["memory.System In-Use Memory MB", "memory.System Current Memory MB", "memory.System Memory Overhead"],
+			"colours":["red", "green", "blue"],
+			"ylabel":"MB",
+			"y2lable":"Percentage",
+			"series":{"memory.System Memory Overhead":{"axis":"y2"}}
+		}
+	}
+}

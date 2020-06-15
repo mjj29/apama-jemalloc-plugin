@@ -69,6 +69,10 @@ The status line gives values in megabytes (note: this is in contrast to the Apam
 - `tot` - (System) Aspace total.
 - `efficiency` - (System) Percentage of current which is in-use.
 
+## Getting memory status in the Log Analyzer
+
+If you are using the [Log Analyzer](https://github.com/ApamaCommunity/apama-log-analyzer) then you can provide the `status-analyzer.json` configuration file here. This will include graphs of the JEMalloc and system memory stats from the memory status lines.
+
 ## API documentation
 
 API documentation can be found here: [API documentation](https://mjj29.github.io/apama-jemalloc-plugin/)
